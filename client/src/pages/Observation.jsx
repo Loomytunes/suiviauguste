@@ -37,11 +37,10 @@ export default function Observation() {
     notes: Object.values(notes).filter(Boolean).join(' | ') || null
   };
 
-  const canSubmit =
-    values.concentration !== null &&
-    values.respect_consigne !== null &&
-    values.emotion_management !== null &&
-    values.respect_peers !== null;
+  const filledCount = [values.concentration, values.respect_consigne, values.emotion_management, values.respect_peers].filter(
+    (v) => v !== null && v !== undefined
+  ).length;
+  const canSubmit = filledCount >= 1;
 
   const handleSubmit = async () => {
     if (!canSubmit || sending) return;
@@ -67,40 +66,41 @@ export default function Observation() {
     <div className="min-h-dvh flex flex-col app-page pb-28">
       <header className="sticky top-0 z-10 flex items-center gap-3 p-4 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/80">
         <BackButton onClick={() => navigate(-1)} />
-        <h1 className="text-xl font-bold text-slate-800 truncate">{label}</h1>
+        <h1 className="text-xl font-bold text-slate-800 truncate flex-1">{label}</h1>
+        <span className="text-slate-500 text-sm font-medium shrink-0">{filledCount} axe{filledCount > 1 ? 's' : ''}</span>
       </header>
 
-      <main className="flex-1 p-4 space-y-4">
+      <main className="flex-1 p-4 space-y-3 overflow-y-auto">
         {AXES.map(({ key, label: axisLabel }) => (
           <div
             key={key}
-            className="bg-white rounded-3xl p-5 shadow-card border border-slate-100 animate-slide-up"
+            className="bg-white rounded-2xl p-4 shadow-card border border-slate-100"
           >
-            <p className="text-slate-700 font-semibold mb-4 text-base">{axisLabel}</p>
-            <div className="flex gap-3">
+            <p className="text-slate-700 font-semibold mb-3 text-sm">{axisLabel}</p>
+            <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setAxis(key, true)}
-                className={`flex-1 flex flex-col items-center justify-center py-5 rounded-2xl transition-all duration-200 active:animate-tap ${
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAxis(key, true); }}
+                className={`flex-1 flex flex-col items-center justify-center py-4 rounded-xl transition-all duration-150 select-none touch-manipulation ${
                   values[key] === true
-                    ? 'bg-green-500 text-white shadow-lg scale-[1.02]'
-                    : 'bg-slate-100 text-slate-400 hover:bg-green-50'
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-400 active:bg-green-100'
                 }`}
               >
-                <span className="text-4xl mb-1">🙂</span>
-                <span className="text-sm font-medium">Positif</span>
+                <span className="text-3xl leading-none">🙂</span>
+                <span className="text-xs font-medium mt-1">Positif</span>
               </button>
               <button
                 type="button"
-                onClick={() => setAxis(key, false)}
-                className={`flex-1 flex flex-col items-center justify-center py-5 rounded-2xl transition-all duration-200 active:animate-tap ${
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAxis(key, false); }}
+                className={`flex-1 flex flex-col items-center justify-center py-4 rounded-xl transition-all duration-150 select-none touch-manipulation ${
                   values[key] === false
-                    ? 'bg-red-500 text-white shadow-lg scale-[1.02]'
-                    : 'bg-slate-100 text-slate-400 hover:bg-red-50'
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-400 active:bg-red-100'
                 }`}
               >
-                <span className="text-4xl mb-1">🙁</span>
-                <span className="text-sm font-medium">Difficulté</span>
+                <span className="text-3xl leading-none">🙁</span>
+                <span className="text-xs font-medium mt-1">Difficulté</span>
               </button>
             </div>
             <ExpandableNote
@@ -112,6 +112,9 @@ export default function Observation() {
         ))}
       </main>
 
+      {!canSubmit && (
+        <p className="px-4 py-1 text-center text-slate-500 text-sm">Choisissez au moins un axe pour envoyer</p>
+      )}
       <StickySubmit onClick={handleSubmit} disabled={!canSubmit} loading={sending}>
         Envoyer l&apos;observation
       </StickySubmit>

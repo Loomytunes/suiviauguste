@@ -79,10 +79,14 @@ app.post('/api/observations', (req, res) => {
     respect_peers,
     notes
   } = body;
-  if (!date || !time || !location ||
-      concentration === undefined || respect_consigne === undefined ||
-      emotion_management === undefined || respect_peers === undefined) {
+  if (!date || !time || !location) {
     return res.status(400).json({ error: 'Champs requis manquants' });
+  }
+  const hasAtLeastOneAxis = [concentration, respect_consigne, emotion_management, respect_peers].some(
+    (v) => v === 0 || v === 1
+  );
+  if (!hasAtLeastOneAxis) {
+    return res.status(400).json({ error: 'Au moins un axe doit être renseigné' });
   }
   const stmt = db.prepare(`
     INSERT INTO observations (date, time, location, staff_email, concentration, respect_consigne, emotion_management, respect_peers, notes)
