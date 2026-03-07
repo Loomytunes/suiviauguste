@@ -1,0 +1,17 @@
+{
+  "name": "suivi-auguste",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm run build",
+    "start": "npm run build && node server/index.js",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && node index.js",
+    "dev:client": "cd client && npm run dev",
+    "postinstall": "cd client && npm install && cd ../server && npm install"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
