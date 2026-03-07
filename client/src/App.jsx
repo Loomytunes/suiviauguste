@@ -5,6 +5,8 @@ import Observation from './pages/Observation';
 import ParentGate from './pages/ParentGate';
 import ParentView from './pages/ParentView';
 import { getPendingObservations, syncObservations, setPendingObservations } from './api';
+import OfflineBar from './components/OfflineBar';
+import InstallBanner from './components/InstallBanner';
 
 export default function App() {
   useEffect(() => {
@@ -19,11 +21,15 @@ export default function App() {
   }, []);
 
   return (
-    <Routes>
+    <>
+      <OfflineBar />
+      <InstallBanner />
+      <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/obs/:location" element={<Observation />} />
       <Route path="/parent" element={<ParentGate />} />
       <Route path="/parent/dashboard" element={<ParentView />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }

@@ -1,15 +1,7 @@
-import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { syncObservations, getPendingObservations, setPendingObservations } from '../api';
-
-const buttons = [
-  { to: '/obs/bus', label: 'Bus', color: 'bg-bus', icon: '🚌' },
-  { to: '/obs/cantine', label: 'Cantine', color: 'bg-cantine', icon: '🍽️' },
-  { to: '/obs/garderie', label: 'Garderie', color: 'bg-garderie', icon: '🏫' },
-  { to: '/obs/recreation', label: 'Récréation', color: 'bg-recreation', icon: '⚽' },
-  { to: '/obs/classe', label: 'Classe', color: 'bg-classe', icon: '📚' },
-  { to: '/parent', label: 'Vue Parent', color: 'bg-parent', icon: '👁️' }
-];
+import { LOCATIONS } from '../lib/constants';
+import ContextCard from '../components/ContextCard';
 
 export default function Home() {
   useEffect(() => {
@@ -22,20 +14,28 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-dvh bg-slate-100 p-4 pb-8 flex flex-col">
-      <h1 className="text-xl font-bold text-slate-800 text-center py-4">Auguste</h1>
-      <div className="flex-1 grid gap-4">
-        {buttons.map((b) => (
-          <Link
-            key={b.to}
-            to={b.to}
-            className={`${b.color} text-white rounded-2xl p-6 flex items-center justify-center gap-4 shadow-lg active:scale-[0.98] min-h-[72px] text-lg font-medium`}
-          >
-            <span className="text-3xl">{b.icon}</span>
-            <span>{b.label}</span>
-          </Link>
+    <div className="min-h-dvh flex flex-col app-page">
+      <header className="pt-6 pb-4 px-4 text-center">
+        <h1 className="text-2xl font-bold text-slate-800">Auguste</h1>
+        <p className="text-slate-500 text-sm mt-0.5">Choisir un contexte</p>
+      </header>
+
+      <main className="flex-1 px-4 pb-4 space-y-3">
+        {LOCATIONS.map((loc) => (
+          <ContextCard
+            key={loc.id}
+            to={loc.to}
+            label={loc.label}
+            color={loc.color}
+            iconName={loc.icon}
+          />
         ))}
-      </div>
+      </main>
+
+      <section className="p-4 pt-2 border-t border-slate-200/80 bg-slate-50/50">
+        <ContextCard to="/parent" label="Vue Parent" color="parent" iconName="Eye" isParent />
+        <p className="text-slate-500 text-xs text-center mt-2">Accès réservé aux parents</p>
+      </section>
     </div>
   );
 }

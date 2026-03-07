@@ -79,7 +79,7 @@ app.post('/api/observations', (req, res) => {
     respect_peers,
     notes
   } = body;
-  if (!date || !time || !location || staff_email === undefined ||
+  if (!date || !time || !location ||
       concentration === undefined || respect_consigne === undefined ||
       emotion_management === undefined || respect_peers === undefined) {
     return res.status(400).json({ error: 'Champs requis manquants' });

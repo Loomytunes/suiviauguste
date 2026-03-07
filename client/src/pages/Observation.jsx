@@ -1,27 +1,20 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { submitObservation, addPendingObservation } from '../api';
-
-const locationLabels = {
-  bus: 'Bus',
-  cantine: 'Cantine',
-  garderie: 'Garderie',
-  recreation: 'Récréation',
-  classe: 'Classe'
-};
-
-const axes = [
-  { key: 'concentration', label: 'Concentration / Agitation' },
-  { key: 'respect_consigne', label: 'Respect des consignes et de l\'adulte' },
-  { key: 'emotion_management', label: 'Gestion des émotions' },
-  { key: 'respect_peers', label: 'Respect de mes camarades' }
-];
+import { LOCATION_LABELS, AXES } from '../lib/constants';
+import BackButton from '../components/BackButton';
+import ExpandableNote from '../components/ExpandableNote';
+import StickySubmit from '../components/StickySubmit';
 
 export default function Observation() {
   const { location } = useParams();
   const navigate = useNavigate();
-  const [staffEmail, setStaffEmail] = useState('');
-  const [values, setValues] = useState({ concentration: null, respect_consigne: null, emotion_management: null, respect_peers: null });
+  const [values, setValues] = useState({
+    concentration: null,
+    respect_consigne: null,
+    emotion_management: null,
+    respect_peers: null
+  });
   const [notes, setNotes] = useState({});
   const [sending, setSending] = useState(false);
 
@@ -36,7 +29,7 @@ export default function Observation() {
     date,
     time,
     location: location || 'classe',
-    staff_email: staffEmail.trim(),
+    staff_email: '',
     concentration: values.concentration === true ? 1 : 0,
     respect_consigne: values.respect_consigne === true ? 1 : 0,
     emotion_management: values.emotion_management === true ? 1 : 0,
@@ -44,7 +37,11 @@ export default function Observation() {
     notes: Object.values(notes).filter(Boolean).join(' | ') || null
   };
 
-  const canSubmit = staffEmail.trim() && values.concentration !== null && values.respect_consigne !== null && values.emotion_management !== null && values.respect_peers !== null;
+  const canSubmit =
+    values.concentration !== null &&
+    values.respect_consigne !== null &&
+    values.emotion_management !== null &&
+    values.respect_peers !== null;
 
   const handleSubmit = async () => {
     if (!canSubmit || sending) return;
@@ -64,61 +61,60 @@ export default function Observation() {
     }
   };
 
-  const label = locationLabels[location] || location;
+  const label = LOCATION_LABELS[location] || location;
 
   return (
-    <div className="min-h-dvh bg-slate-100 p-4 pb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <button type="button" onClick={() => navigate(-1)} className="p-2 rounded-full bg-white shadow text-slate-700">←</button>
-        <h1 className="text-lg font-bold text-slate-800">{label}</h1>
-      </div>
+    <div className="min-h-dvh flex flex-col app-page pb-28">
+      <header className="sticky top-0 z-10 flex items-center gap-3 p-4 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/80">
+        <BackButton onClick={() => navigate(-1)} />
+        <h1 className="text-xl font-bold text-slate-800 truncate">{label}</h1>
+      </header>
 
-      <label className="block mb-2 text-slate-600 text-sm">Email du personnel</label>
-      <input
-        type="email"
-        value={staffEmail}
-        onChange={(e) => setStaffEmail(e.target.value)}
-        placeholder="email@ecole.fr"
-        className="w-full p-4 rounded-xl border border-slate-200 text-base mb-6"
-      />
-
-      {axes.map(({ key, label: axisLabel }) => (
-        <div key={key} className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-          <p className="text-slate-700 font-medium mb-3">{axisLabel}</p>
-          <div className="flex gap-4 justify-center mb-3">
-            <button
-              type="button"
-              onClick={() => setAxis(key, true)}
-              className={`flex-1 py-4 rounded-xl text-2xl transition ${values[key] === true ? 'bg-green-500 text-white shadow' : 'bg-slate-100 text-slate-400'}`}
-            >
-              😊 Positif
-            </button>
-            <button
-              type="button"
-              onClick={() => setAxis(key, false)}
-              className={`flex-1 py-4 rounded-xl text-2xl transition ${values[key] === false ? 'bg-red-500 text-white shadow' : 'bg-slate-100 text-slate-400'}`}
-            >
-              😢 Difficulté
-            </button>
+      <main className="flex-1 p-4 space-y-4">
+        {AXES.map(({ key, label: axisLabel }) => (
+          <div
+            key={key}
+            className="bg-white rounded-3xl p-5 shadow-card border border-slate-100 animate-slide-up"
+          >
+            <p className="text-slate-700 font-semibold mb-4 text-base">{axisLabel}</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setAxis(key, true)}
+                className={`flex-1 flex flex-col items-center justify-center py-5 rounded-2xl transition-all duration-200 active:animate-tap ${
+                  values[key] === true
+                    ? 'bg-green-500 text-white shadow-lg scale-[1.02]'
+                    : 'bg-slate-100 text-slate-400 hover:bg-green-50'
+                }`}
+              >
+                <span className="text-4xl mb-1">🙂</span>
+                <span className="text-sm font-medium">Positif</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAxis(key, false)}
+                className={`flex-1 flex flex-col items-center justify-center py-5 rounded-2xl transition-all duration-200 active:animate-tap ${
+                  values[key] === false
+                    ? 'bg-red-500 text-white shadow-lg scale-[1.02]'
+                    : 'bg-slate-100 text-slate-400 hover:bg-red-50'
+                }`}
+              >
+                <span className="text-4xl mb-1">🙁</span>
+                <span className="text-sm font-medium">Difficulté</span>
+              </button>
+            </div>
+            <ExpandableNote
+              value={notes[key] || ''}
+              onChange={(v) => setNote(key, v)}
+              placeholder="Note (optionnelle)"
+            />
           </div>
-          <input
-            type="text"
-            placeholder="Note (optionnelle)"
-            value={notes[key] || ''}
-            onChange={(e) => setNote(key, e.target.value)}
-            className="w-full p-3 rounded-lg border border-slate-200 text-sm"
-          />
-        </div>
-      ))}
+        ))}
+      </main>
 
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={!canSubmit || sending}
-        className="w-full py-5 rounded-2xl bg-slate-800 text-white text-lg font-bold shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 mt-6"
-      >
-        {sending ? 'Envoi…' : 'Envoyer l\'observation'}
-      </button>
+      <StickySubmit onClick={handleSubmit} disabled={!canSubmit} loading={sending}>
+        Envoyer l&apos;observation
+      </StickySubmit>
     </div>
   );
 }

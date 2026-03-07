@@ -34,7 +34,6 @@ function formatObservation(obs) {
     ``,
     `Lieu : ${loc}`,
     `Date : ${obs.date} à ${obs.time}`,
-    `Par : ${obs.staff_email}`,
     ``,
     `Axe 1 - Concentration / Agitation : ${obs.concentration === 1 ? 'Positif' : 'Difficulté'}`,
     `Axe 2 - Respect des consignes : ${obs.respect_consigne === 1 ? 'Positif' : 'Difficulté'}`,

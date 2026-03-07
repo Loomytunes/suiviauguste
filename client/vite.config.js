@@ -17,7 +17,7 @@ export default defineConfig({
         name: 'Suivi Auguste',
         short_name: 'Auguste',
         description: 'Suivi comportemental d\'Auguste',
-        theme_color: '#1e3a5f',
+        theme_color: '#f1f5f9',
         background_color: '#f8fafc',
         display: 'standalone',
         orientation: 'portrait',
