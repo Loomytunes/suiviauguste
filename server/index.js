@@ -47,7 +47,7 @@ app.get('/api/stats', (req, res) => {
   const axes = ['concentration', 'respect_consigne', 'emotion_management', 'respect_peers'];
   const perAxis = axes.map(axis => {
     let pos = 0, neg = 0;
-    all.forEach(row => (row[axis] === 1 ? pos++ : neg++);
+    all.forEach(row => (row[axis] === 1 ? pos++ : neg++));
     return { axis, positive: pos, negative: neg };
   });
   const byDate = db.prepare(
