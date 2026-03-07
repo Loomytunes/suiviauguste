@@ -25,15 +25,16 @@ export default function Observation() {
   const date = now.toISOString().slice(0, 10);
   const time = now.toTimeString().slice(0, 5);
 
+  const toAxis = (v) => (v === true ? 1 : v === false ? 0 : null);
   const payload = {
     date,
     time,
     location: location || 'classe',
     staff_email: '',
-    concentration: values.concentration === true ? 1 : 0,
-    respect_consigne: values.respect_consigne === true ? 1 : 0,
-    emotion_management: values.emotion_management === true ? 1 : 0,
-    respect_peers: values.respect_peers === true ? 1 : 0,
+    concentration: toAxis(values.concentration),
+    respect_consigne: toAxis(values.respect_consigne),
+    emotion_management: toAxis(values.emotion_management),
+    respect_peers: toAxis(values.respect_peers),
     notes: Object.values(notes).filter(Boolean).join(' | ') || null
   };
 

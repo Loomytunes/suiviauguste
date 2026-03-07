@@ -22,16 +22,20 @@ export default function ObservationTimelineCard({ obs }) {
         </time>
       </div>
       <div className="flex gap-2 mt-3 flex-wrap">
-        {AXES.map(({ key, short }) => (
-          <span
-            key={key}
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
-              obs[key] === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-            }`}
-          >
-            <AxisIcon value={obs[key]} /> {short}
-          </span>
-        ))}
+        {AXES.map(({ key, short }) => {
+          const val = obs[key];
+          if (val !== 0 && val !== 1) return null;
+          return (
+            <span
+              key={key}
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
+                val === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`}
+            >
+              <AxisIcon value={val} /> {short}
+            </span>
+          );
+        })}
       </div>
       {hasNotes && (
         <>

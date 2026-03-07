@@ -34,14 +34,19 @@ function formatObservation(obs) {
     ``,
     `Lieu : ${loc}`,
     `Date : ${obs.date} à ${obs.time}`,
-    ``,
-    `Axe 1 - Concentration / Agitation : ${obs.concentration === 1 ? 'Positif' : 'Difficulté'}`,
-    `Axe 2 - Respect des consignes : ${obs.respect_consigne === 1 ? 'Positif' : 'Difficulté'}`,
-    `Axe 3 - Gestion des émotions : ${obs.emotion_management === 1 ? 'Positif' : 'Difficulté'}`,
-    `Axe 4 - Respect des camarades : ${obs.respect_peers === 1 ? 'Positif' : 'Difficulté'}`,
-    ``,
-    obs.notes ? `Note : ${obs.notes}` : ''
+    ``
   ];
+  const axes = [
+    ['concentration', 'Concentration / Agitation'],
+    ['respect_consigne', 'Respect des consignes'],
+    ['emotion_management', 'Gestion des émotions'],
+    ['respect_peers', 'Respect des camarades']
+  ];
+  axes.forEach(([key, label]) => {
+    const v = obs[key];
+    if (v === 0 || v === 1) lines.push(`${label} : ${v === 1 ? 'Positif' : 'Difficulté'}`);
+  });
+  if (obs.notes) lines.push(``, `Note : ${obs.notes}`);
   return lines.filter(Boolean).join('\n');
 }
 

@@ -38,31 +38,54 @@ app.get('/api/observations', (req, res) => {
   res.json(rows);
 });
 
-// API: Stats for charts
+// API: Stats (seuls les axes renseignés sont comptés, pas les NULL)
 app.get('/api/stats', (req, res) => {
   const byLocation = db.prepare(
     'SELECT location, COUNT(*) as count FROM observations GROUP BY location'
   ).all();
-  const all = db.prepare('SELECT concentration, respect_consigne, emotion_management, respect_peers FROM observations').all();
   const axes = ['concentration', 'respect_consigne', 'emotion_management', 'respect_peers'];
   const perAxis = axes.map(axis => {
-    let pos = 0, neg = 0;
-    all.forEach(row => (row[axis] === 1 ? pos++ : neg++));
+    const pos = db.prepare(`SELECT COUNT(*) as n FROM observations WHERE ${axis} = 1`).get().n;
+    const neg = db.prepare(`SELECT COUNT(*) as n FROM observations WHERE ${axis} = 0`).get().n;
     return { axis, positive: pos, negative: neg };
   });
-  const byDate = db.prepare(
-    `SELECT date, 
-      SUM(CASE WHEN concentration=1 THEN 1 ELSE 0 END) as c_pos,
-      SUM(CASE WHEN concentration=0 THEN 1 ELSE 0 END) as c_neg,
-      SUM(CASE WHEN respect_consigne=1 THEN 1 ELSE 0 END) as r_pos,
-      SUM(CASE WHEN respect_consigne=0 THEN 1 ELSE 0 END) as r_neg,
-      SUM(CASE WHEN emotion_management=1 THEN 1 ELSE 0 END) as e_pos,
-      SUM(CASE WHEN emotion_management=0 THEN 1 ELSE 0 END) as e_neg,
-      SUM(CASE WHEN respect_peers=1 THEN 1 ELSE 0 END) as p_pos,
-      SUM(CASE WHEN respect_peers=0 THEN 1 ELSE 0 END) as p_neg
+  const byDateRows = db.prepare(
+    `SELECT date,
+      SUM(CASE WHEN concentration = 1 THEN 1 ELSE 0 END) as c_pos,
+      SUM(CASE WHEN concentration = 0 THEN 1 ELSE 0 END) as c_neg,
+      SUM(CASE WHEN concentration IS NOT NULL THEN 1 ELSE 0 END) as c_cnt,
+      SUM(CASE WHEN respect_consigne = 1 THEN 1 ELSE 0 END) as r_pos,
+      SUM(CASE WHEN respect_consigne = 0 THEN 1 ELSE 0 END) as r_neg,
+      SUM(CASE WHEN respect_consigne IS NOT NULL THEN 1 ELSE 0 END) as r_cnt,
+      SUM(CASE WHEN emotion_management = 1 THEN 1 ELSE 0 END) as e_pos,
+      SUM(CASE WHEN emotion_management = 0 THEN 1 ELSE 0 END) as e_neg,
+      SUM(CASE WHEN emotion_management IS NOT NULL THEN 1 ELSE 0 END) as e_cnt,
+      SUM(CASE WHEN respect_peers = 1 THEN 1 ELSE 0 END) as p_pos,
+      SUM(CASE WHEN respect_peers = 0 THEN 1 ELSE 0 END) as p_neg,
+      SUM(CASE WHEN respect_peers IS NOT NULL THEN 1 ELSE 0 END) as p_cnt
     FROM observations GROUP BY date ORDER BY date`
   ).all();
-  res.json({ byLocation, perAxis, byDate });
+  const byDate = byDateRows.map((d) => {
+    const totalPos = (d.c_pos || 0) + (d.r_pos || 0) + (d.e_pos || 0) + (d.p_pos || 0);
+    const totalCnt = (d.c_cnt || 0) + (d.r_cnt || 0) + (d.e_cnt || 0) + (d.p_cnt || 0);
+    return {
+      date: d.date,
+      score: totalCnt ? Math.round((totalPos / totalCnt) * 100) : null,
+      evaluations: totalCnt
+    };
+  });
+  const allRows = db.prepare('SELECT concentration, respect_consigne, emotion_management, respect_peers FROM observations').all();
+  let totalPos = 0, totalEval = 0;
+  allRows.forEach((row) => {
+    axes.forEach((axis) => {
+      if (row[axis] !== null && row[axis] !== undefined) {
+        totalEval += 1;
+        if (row[axis] === 1) totalPos += 1;
+      }
+    });
+  });
+  const globalScore = totalEval ? Math.round((totalPos / totalEval) * 100) : null;
+  res.json({ byLocation, perAxis, byDate, totalObservations: allRows.length, globalScore, totalEvaluations: totalEval });
 });
 
 // API: Create observation
@@ -92,15 +115,16 @@ app.post('/api/observations', (req, res) => {
     INSERT INTO observations (date, time, location, staff_email, concentration, respect_consigne, emotion_management, respect_peers, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
+  const toVal = (v) => (v === 1 ? 1 : v === 0 ? 0 : null);
   const result = stmt.run(
     String(date),
     String(time),
     String(location),
     String(staff_email || ''),
-    concentration === 1 ? 1 : 0,
-    respect_consigne === 1 ? 1 : 0,
-    emotion_management === 1 ? 1 : 0,
-    respect_peers === 1 ? 1 : 0,
+    toVal(concentration),
+    toVal(respect_consigne),
+    toVal(emotion_management),
+    toVal(respect_peers),
     notes ? String(notes) : null
   );
   const id = result.lastInsertRowid;
@@ -122,10 +146,10 @@ app.post('/api/sync', (req, res) => {
       INSERT INTO observations (date, time, location, staff_email, concentration, respect_consigne, emotion_management, respect_peers, notes)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
+    const toVal = (v) => (v === 1 ? 1 : v === 0 ? 0 : null);
     const result = stmt.run(
       String(date), String(time), String(location), String(staff_email || ''),
-      concentration === 1 ? 1 : 0, respect_consigne === 1 ? 1 : 0,
-      emotion_management === 1 ? 1 : 0, respect_peers === 1 ? 1 : 0,
+      toVal(concentration), toVal(respect_consigne), toVal(emotion_management), toVal(respect_peers),
       notes ? String(notes) : null
     );
     const id = result.lastInsertRowid;
