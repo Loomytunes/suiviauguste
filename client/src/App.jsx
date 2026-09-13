@@ -1,14 +1,18 @@
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Observation from './pages/Observation';
 import ParentGate from './pages/ParentGate';
 import ParentView from './pages/ParentView';
+import EcranDashboard from './pages/EcranDashboard';
 import { getPendingObservations, syncObservations, setPendingObservations } from './api';
 import OfflineBar from './components/OfflineBar';
 import InstallBanner from './components/InstallBanner';
 
 export default function App() {
+  const location = useLocation();
+  const isEcran = location.pathname.startsWith('/ecran');
+
   useEffect(() => {
     const onOnline = () => {
       const pending = getPendingObservations();
@@ -22,13 +26,14 @@ export default function App() {
 
   return (
     <>
-      <OfflineBar />
-      <InstallBanner />
+      {!isEcran && <OfflineBar />}
+      {!isEcran && <InstallBanner />}
       <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/obs/:location" element={<Observation />} />
       <Route path="/parent" element={<ParentGate />} />
       <Route path="/parent/dashboard" element={<ParentView />} />
+      <Route path="/ecran" element={<EcranDashboard />} />
       </Routes>
     </>
   );
