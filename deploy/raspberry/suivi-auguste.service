@@ -1,0 +1,17 @@
+[Unit]
+Description=Suivi Auguste PWA
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/suiviauguste
+Environment=NODE_ENV=production
+Environment=PORT=3000
+EnvironmentFile=-/home/pi/suiviauguste/server/.env
+ExecStart=/usr/bin/node server/index.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
